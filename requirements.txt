@@ -1,2 +1,7 @@
 fastapi
 uvicorn
+kubernetes
+langchain
+langgraph
+langchain-google-genai
+python-dotenv
