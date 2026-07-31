@@ -3,7 +3,7 @@ import os
 from langchain.agents import create_agent
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from tools.pod_tools import create_pod, get_pod_logs, list_pods, get_pod, delete_pod, get_pod_events
+from tools.registry import tools
 
 SYSTEM_PROMPT = """
 You are a Kubernetes assistant for this project.
@@ -20,6 +20,6 @@ def build_kubernetes_agent():
 
     return create_agent(
         model=model,
-        tools=[list_pods, get_pod_logs, create_pod, get_pod, delete_pod, get_pod_events],
+        tools=tools,
         system_prompt=SYSTEM_PROMPT.strip(),
     )

@@ -2,7 +2,7 @@ from ctypes import cast
 
 from langchain_core.tools import tool
 from kubernetes.client import V1Container, V1ContainerPort, V1ObjectMeta, V1Pod, V1PodSpec, V1PodStatus
-from schema.V1Pod import CreatePodSchema
+from schema.pod import CreatePodSchema
 from services.kubernetes.pod_service import PodService
 
 pod_service = PodService()
