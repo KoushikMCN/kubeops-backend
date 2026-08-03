@@ -74,9 +74,8 @@ class NodeService:
         self,
         name: str,
         ignore_daemonsets: bool = True,
-        delete_emptydir_data: bool = True,
         grace_period_seconds: int = 30,
-    ) -> str:
+    ) -> dict:
         """
         Drain a node by evicting all evictable pods.
 
@@ -90,6 +89,8 @@ class NodeService:
                 field_selector=field_selector,
             ),
         )
+
+        evicted_pods: list[dict[str, str]] = []
 
         for pod in pods.items or []:
             metadata = pod.metadata
@@ -125,7 +126,18 @@ class NodeService:
                 ),
             )
 
-        return f"Node '{name}' drained successfully."
+            evicted_pods.append(
+                {
+                    "name": pod_name,
+                    "namespace": namespace,
+                }
+            )
+
+        return {
+            "node": name,
+            "evicted_pods": evicted_pods,
+            "evicted_count": len(evicted_pods),
+        }
 
     def taint_node(
         self,

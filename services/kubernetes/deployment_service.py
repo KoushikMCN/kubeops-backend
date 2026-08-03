@@ -23,9 +23,7 @@ class DeploymentService:
                 namespace=namespace
             ))
         return cast(V1DeploymentList, 
-            self.apps_v1.list_deployment_for_all_namespaces(
-            namespace=namespace
-        ))
+            self.apps_v1.list_deployment_for_all_namespaces())
 
     def get_deployment(
         self,

@@ -10,7 +10,7 @@ from kubernetes.client.rest import ApiException
 from services.kubernetes.client import core_v1
 
 
-class ServiceService:
+class SvcService:
     """Service for Kubernetes Service operations."""
 
     def __init__(self):

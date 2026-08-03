@@ -9,12 +9,14 @@ response = agent.invoke(
         "messages": [
             {
                 "role": "user",
-                "content": "there must be an nginx deployment in default namespace. scale it to 5 replicas",
+                "content": "delete the api-config in default namespace",
             }
         ]
     }
 )
 
-# print(response["messages"][-1].content[0]["text"])
+print("===============================================================================================================")
+print(response["messages"][-1].content[0]["text"])
+print("===============================================================================================================")
 console = Console()
 console.print(Markdown(response["messages"][-1].content[0]["text"]))
