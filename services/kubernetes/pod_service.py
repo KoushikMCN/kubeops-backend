@@ -5,6 +5,8 @@ from kubernetes.client.rest import ApiException
 
 from services.kubernetes.client import core_v1
 
+from state.pod_state import PodEvent
+
 
 class PodService:
     """Service for Kubernetes Pod operations."""
@@ -87,7 +89,7 @@ class PodService:
         self,
         namespace: str,
         pod_name: str,
-    ):
+    ) -> list[PodEvent]:
         """Get all events associated with a pod."""
 
         events = cast(
