@@ -9,6 +9,7 @@ from state.pod_state import PodEvent
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
+from kubernetes.client.rest import ApiException
 
 deployment_service = DeploymentService()
 pod_service = PodService()
@@ -105,10 +106,20 @@ def get_logs_node(
         if status in HEALTHY_POD_STATUSES:
             continue
 
-        logs = pod_service.get_pod_logs(
-            name=pod["name"],
-            namespace=pod["namespace"],
-        )
+        try:
+            logs = pod_service.get_pod_logs(
+                name=pod["name"],
+                namespace=pod["namespace"],
+            )
+
+        except ApiException as e:
+            if e.status == 400:
+                logs = (
+                    "Container has not started yet. "
+                    "Logs are unavailable."
+                )
+            else:
+                logs = str(e)
 
         pod_logs[pod["name"]] = logs
 
