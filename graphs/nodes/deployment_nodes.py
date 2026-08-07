@@ -20,7 +20,7 @@ HEALTHY_POD_STATUSES = {
 }
 
 llm = ChatGoogleGenerativeAI(
-    model=os.getenv("GOOGLE_MODEL", "gemini-2.5-flash"),
+    model=os.getenv("GOOGLE_MODEL", "gemini-3.1-flash-lite"),
     google_api_key=os.getenv("GOOGLE_API_KEY"),
 )
 
