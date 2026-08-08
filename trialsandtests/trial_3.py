@@ -1,3 +1,5 @@
+# Invoke supervisor (it chooses btw kubernetes crud and deployment diagnosis workflow)
+
 from supervisors.kubernetes_supervisor import supervisor
 
 from rich.console import Console
