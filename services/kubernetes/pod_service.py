@@ -24,11 +24,30 @@ class PodService:
             ),
         )
 
-    def list_pods(self, namespace: Optional[str] = None) -> V1PodList:
-        """List all pods in a namespace or across all namespaces."""
+    def list_pods(
+        self,
+        namespace: str | None = None,
+        label_selector: str | None = None,
+    ) -> V1PodList:
+        """
+        List pods in a namespace or across all namespaces.
+        """
+
         if namespace:
-            return cast(V1PodList, self.core_v1.list_namespaced_pod(namespace))
-        return cast(V1PodList, self.core_v1.list_pod_for_all_namespaces())
+            return cast(
+                V1PodList,
+                self.core_v1.list_namespaced_pod(
+                    namespace=namespace,
+                    label_selector=label_selector,
+                ),
+            )
+
+        return cast(
+            V1PodList,
+            self.core_v1.list_pod_for_all_namespaces(
+                label_selector=label_selector,
+            ),
+        )
 
     # def get_pod(self, name: str, namespace: str) -> V1Pod:
     #     """Get a pod by name."""

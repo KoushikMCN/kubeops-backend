@@ -1,6 +1,6 @@
 from typing import TypedDict
 
-from state.deployment_state import DeploymentInfo
+from .schema.deployment_info import DeploymentInfo
 
 
 class RolloutState(TypedDict):

@@ -4,6 +4,7 @@ from kubernetes.client import (
     V1DeleteOptions,
     V1Service,
     V1ServiceList,
+    V1Endpoints
 )
 from kubernetes.client.rest import ApiException
 
@@ -59,6 +60,32 @@ class SvcService:
                 namespace=namespace,
             ),
         )
+
+    def get_service_endpoints(
+        self,
+        name: str,
+        namespace: str,
+    ) -> list[str]:
+        """
+        Get the IP addresses of the endpoints backing a Service.
+        """
+
+        endpoints = cast(
+            V1Endpoints,
+            self.core_v1.read_namespaced_endpoints(
+                name=name,
+                namespace=namespace,
+            ),
+        )
+
+        addresses: list[str] = []
+
+        for subset in endpoints.subsets or []:
+            for address in subset.addresses or []:
+                if address.ip:
+                    addresses.append(address.ip)
+
+        return addresses
 
     def delete_service(
         self,
