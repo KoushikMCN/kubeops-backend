@@ -9,7 +9,7 @@ graph = build_deployment_diagnosis_graph()
 
 result = graph.invoke(
     {
-        "deployment_name": "crash-demo",
+        "deployment_name": "nginx-deployment",
         "namespace": "default",
         "deployment": None,
         "pods": [],
@@ -20,9 +20,9 @@ result = graph.invoke(
 )
 
 # print("================================================================================")
-# print(result["diagnosis"])
+# print(result["diagnosis"][0]["text"])
 # print("================================================================================")
 print("\n\n\n")
 console = Console()
-console.print(Markdown(result["diagnosis"]))
+console.print(Markdown(result["diagnosis"][0]["text"]))
 print("\n\n\n")

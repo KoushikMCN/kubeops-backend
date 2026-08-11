@@ -1,14 +1,15 @@
 from typing import Optional, cast
 from kubernetes.client import (
-    AppsV1Api,
     V1DeleteOptions,
     V1Deployment,
     V1DeploymentList,
 )
 
+from services.kubernetes.client import apps_v1
+
 class DeploymentService:
     def __init__(self):
-        self.apps_v1 = AppsV1Api()
+        self.apps_v1 = apps_v1
 
     def list_deployments(
         self,

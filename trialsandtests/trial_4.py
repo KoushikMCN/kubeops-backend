@@ -22,5 +22,5 @@ result = graph.invoke(
 # print("================================================================================")
 print("\n\n\n")
 console = Console()
-console.print(Markdown(result["diagnosis"]))
+console.print(Markdown(result["rollout_message"]))
 print("\n\n\n")
