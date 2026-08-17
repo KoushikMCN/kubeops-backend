@@ -1,5 +1,5 @@
 from kubernetes.client import V1Pod
-from state.pod_state import PodInfo
+from state.schema.pod_info import PodInfo
 
 
 def pod_to_dict(

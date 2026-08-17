@@ -41,7 +41,7 @@ def service_to_dict(
         "cluster_ip": spec.cluster_ip,
         "selector": spec.selector or {},
         "ports": ports,
-        "external_ips": spec.external_i_ps,
+        "external_ips": spec.external_ips,
         "load_balancer_ip": (
             status.load_balancer.ingress[0].ip
             if (
