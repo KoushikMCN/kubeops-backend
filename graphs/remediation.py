@@ -1,8 +1,10 @@
+from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, END, StateGraph
 
 from graphs.nodes.remediation_nodes import (
     create_remediation_plan_node,
     validate_remediation_plan_node,
+    approval_gate_node
 )
 from state.remediation_state import RemediationState
 
@@ -37,6 +39,11 @@ def build_remediation_graph():
         validate_remediation_plan_node,
     )
 
+    graph.add_node(
+        "approval_gate",
+        approval_gate_node,
+    )
+
     graph.add_edge(
         START,
         "create_remediation_plan",
@@ -52,8 +59,17 @@ def build_remediation_graph():
         route_after_validation,
         {
             "invalid_plan": END,
-            "approval_pending": END,
+            "approval_pending": "approval_gate",
         },
     )
 
-    return graph.compile()
+    graph.add_edge(
+        "approval_gate",
+        END
+    )
+
+    checkpointer = InMemorySaver()
+
+    return graph.compile(
+        checkpointer=checkpointer,
+    )

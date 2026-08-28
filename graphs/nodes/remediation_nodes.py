@@ -4,6 +4,7 @@ from typing import cast
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langgraph.types import interrupt
 
 from schema.remediation import RemediationPlan
 from state.remediation_state import RemediationState
@@ -174,5 +175,31 @@ def validate_remediation_plan_node(
     # restart_deployment requires no parameters
     state["plan_valid"] = True
     state["validation_error"] = None
+
+    return state
+
+
+def approval_gate_node(
+    state: RemediationState,
+) -> RemediationState:
+    """
+    Pause the remediation workflow and wait for user approval.
+    """
+
+    plan = state["remediation_plan"]
+
+    if plan is None:
+        state["approved"] = False
+        return state
+
+    approval_response = interrupt(
+        {
+            "type": "remediation_approval",
+            "message": "Approve this remediation action?",
+            "plan": plan.model_dump(),
+        }
+    )
+
+    state["approved"] = approval_response["approved"]
 
     return state
