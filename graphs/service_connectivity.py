@@ -27,7 +27,7 @@ def build_service_connectivity_graph():
         list_matching_pods_node,
     )
     graph.add_node(
-        "diagnose_service",
+        "diagnose_service_node",
         diagnose_service_node,
     )
 
@@ -52,7 +52,7 @@ def build_service_connectivity_graph():
     )
 
     graph.add_edge(
-        "list_matching_pods",
+        "diagnose_service_node",
         END,
     )
 

@@ -6,9 +6,15 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from agents.kubernetes_agent import build_kubernetes_agent
 from graphs.deployment_diagnosis import build_deployment_diagnosis_graph
+from graphs.deployment_rollout import build_deployment_rollout_status_graph
+from graphs.cluster_health import build_cluster_health_graph
+from graphs.service_connectivity import build_service_connectivity_graph
 
 deployment_graph = build_deployment_diagnosis_graph()
 kubernetes_agent = build_kubernetes_agent()
+deployment_rollout_graph = build_deployment_rollout_status_graph()
+cluster_health_graph = build_cluster_health_graph()
+service_connectivity_graph = build_service_connectivity_graph()
 
 
 @tool
@@ -70,6 +76,78 @@ def deployment_diagnosis(
 
     return result["diagnosis"]
 
+@tool
+def deployment_rollout(
+    deployment_name: str,
+    namespace: str = "default",
+) -> str:
+    """
+    Check the rollout status of a Kubernetes deployment.
+    Use this to determine whether a deployment rollout is successful,
+    in progress, or failing.
+    """
+
+    result = deployment_rollout_graph.invoke(
+        {
+            "deployment_name": deployment_name,
+            "namespace": namespace,
+            "deployment": None,
+            "rollout_status": None,
+            "rollout_message": None,
+        }
+    )
+
+    return result["rollout_message"]
+
+
+@tool
+def cluster_health(
+    namespace: str = "default",
+) -> str:
+    """
+    Check the overall health of a Kubernetes namespace.
+    Use this to identify unhealthy deployments, pods, services,
+    and relevant Kubernetes events.
+    """
+
+    result = cluster_health_graph.invoke(
+        {
+            "namespace": namespace,
+            "deployments": [],
+            "pods": [],
+            "services": [],
+            "events": [],
+            "diagnosis": None,
+        }
+    )
+
+    return result["diagnosis"]
+
+
+@tool
+def service_connectivity(
+    service_name: str,
+    namespace: str = "default",
+) -> str:
+    """
+    Diagnose why a Kubernetes Service may not be reachable
+    or routing traffic correctly.
+    """
+
+    result = service_connectivity_graph.invoke(
+        {
+            "service_name": service_name,
+            "namespace": namespace,
+            "service":  None,
+            "endpoints": [],
+            "pods": [],
+            "diagnosis": None,
+            "error": None
+        }
+    )
+
+    return result["diagnosis"]
+
 model = ChatGoogleGenerativeAI(
     model=os.getenv("GOOGLE_MODEL", "gemini-3.1-flash-lite"),
     google_api_key=os.getenv("GOOGLE_API_KEY"),
@@ -80,22 +158,44 @@ supervisor = create_agent(
     tools=[
         kubernetes_crud,
         deployment_diagnosis,
+        deployment_rollout,
+        cluster_health,
+        service_connectivity,
     ],
     system_prompt="""
 You are the supervisor for a Kubernetes AI assistant.
 
-You have two tools:
+Choose the appropriate tool or tools to answer the user's request.
 
-1. kubernetes_crud
-- Use for creating, deleting, updating, listing, describing, scaling, restarting and inspecting Kubernetes resources.
+You may call multiple tools sequentially when necessary.
 
-2. deployment_diagnosis
-- Use ONLY when the user wants to diagnose or troubleshoot a deployment.
+After each tool result, decide whether:
+1. The user's request has been fully answered -> return the answer.
+2. More investigation is needed -> call another relevant tool.
 
-Choose exactly one tool.
-Never diagnose when the user wants CRUD.
-Never use CRUD when the user explicitly asks for deployment diagnosis.
+Do not call tools unnecessarily.
 
-## When a tool returns the final answer, return it verbatim without modification.
+Tool usage:
+
+- kubernetes_crud:
+  Create, delete, update, list, describe, scale, restart, and inspect
+  Kubernetes resources.
+
+- deployment_diagnosis:
+  Diagnose why a specific deployment is unhealthy.
+
+- deployment_rollout:
+  Check whether a deployment rollout is successful, in progress, or failing.
+
+- service_connectivity:
+  Diagnose why a Kubernetes Service is unreachable or has connectivity issues.
+
+- cluster_health:
+  Assess the overall health of a cluster or namespace.
+
+Use evidence from previous tool results when deciding whether another
+tool should be called.
+
+When sufficient information has been collected, provide the final answer.
 """,
 )
