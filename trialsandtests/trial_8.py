@@ -26,17 +26,14 @@ config: RunnableConfig = {
 initial_state: RemediationState = {
     "namespace": "default",
     "resource_type": "deployment",
-    "resource_name": "crash-demo",
+    "resource_name": "nginx-deployment",
     "diagnosis": """
-The container crash-demo is repeatedly crashing and restarting,
-causing the pod to enter a CrashLoopBackOff state.
+The deployment 'nginx-deployment' is currently unhealthy.
+Its pods are not becoming ready, and the deployment is stuck
+in a failed rollout state.
 
-The container likely exits immediately after startup because its
-entrypoint command is short-lived or fails.
-
-Suggested fix: Review and modify the container command and args.
-Ensure the container runs a long-lived process. For a busybox image,
-a possible command is: sh -c "sleep infinity".
+The recommended remediation is to restart the deployment so that
+Kubernetes recreates the deployment's pods and attempts the rollout again.
 """,
 
     "remediation_plan": None,

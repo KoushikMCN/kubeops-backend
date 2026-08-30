@@ -64,8 +64,8 @@ def get_rollout_status_node(
 
     if deployment.status is None:
         state["rollout_status"] = "unknown"
-
-    state["rollout_status"] = rollout_status
+    else:
+        state["rollout_status"] = rollout_status
     
     return state
 

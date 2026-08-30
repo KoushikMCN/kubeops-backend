@@ -9,6 +9,9 @@ from langgraph.types import interrupt
 from schema.remediation import RemediationPlan
 from state.remediation_state import RemediationState
 
+from services.kubernetes.deployment_service import DeploymentService
+from graphs.deployment_rollout import build_deployment_rollout_status_graph
+
 load_dotenv()
 
 model = ChatGoogleGenerativeAI(
@@ -17,6 +20,9 @@ model = ChatGoogleGenerativeAI(
 )
 
 remediation_planner = model.with_structured_output(RemediationPlan)
+
+deployment_service = DeploymentService()
+deployment_rollout_graph = build_deployment_rollout_status_graph()
 
 
 def create_remediation_plan_node(
@@ -201,5 +207,94 @@ def approval_gate_node(
     )
 
     state["approved"] = approval_response["approved"]
+
+    return state
+
+def execute_action_node(
+    state: RemediationState,
+) -> RemediationState:
+    """
+    Execute the approved remediation action.
+    """
+
+    plan = state["remediation_plan"]
+
+    if plan is None:
+        state["execution_error"] = "No remediation plan available."
+        return state
+
+    if not state["approved"]:
+        state["execution_error"] = "Remediation was not approved."
+        return state
+
+    if plan.action == "restart_deployment":
+        deployment_service.restart_deployment(
+            namespace=plan.target.namespace,
+            deployment_name=plan.target.resource_name,
+        )
+
+        state["execution_result"] = (
+            f"Successfully restarted deployment "
+            f"{plan.target.resource_name}."
+        )
+
+    else:
+        state["execution_error"] = (
+            f"Unsupported remediation action: {plan.action}"
+        )
+
+    return state
+
+
+def verify_result_node(
+    state: RemediationState,
+) -> RemediationState:
+    """
+    Verify whether the remediation successfully resolved the issue.
+    """
+
+    plan = state["remediation_plan"]
+
+    if plan is None:
+        state["resolved"] = False
+        state["verification_result"] = (
+            "Unable to verify remediation: no remediation plan found."
+        )
+        return state
+
+    if state["execution_error"]:
+        state["resolved"] = False
+        state["verification_result"] = (
+            "Unable to verify remediation because execution failed."
+        )
+        return state
+
+    if plan.action == "restart_deployment":
+        result = deployment_rollout_graph.invoke(
+            {
+                "deployment_name": plan.target.resource_name,
+                "namespace": plan.target.namespace,
+                "deployment": None,
+                "rollout_status": None,
+                "rollout_message": None,
+            }
+        )
+
+        rollout_status = result["rollout_status"]
+
+        if rollout_status == "complete":
+            state["resolved"] = True
+            state["verification_result"] = result["rollout_message"]
+
+        else:
+            state["resolved"] = False
+            state["verification_result"] = result["rollout_message"]
+
+    else:
+        state["resolved"] = False
+        state["verification_result"] = (
+            f"Verification is not implemented for "
+            f"'{plan.action}'."
+        )
 
     return state
